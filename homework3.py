@@ -1,4 +1,5 @@
 import sys
+import re
 
 class KnowledgeBase():
     def __init__(self, KB):
@@ -119,7 +120,7 @@ class KnowledgeBase():
                 z[y] = x
                 return z
         
-        elif "(" in x and "(" in y and isinstance(x, str) and isinstance(y, str):
+        elif isinstance(x, str) and isinstance(y, str) and "(" in x and "(" in y:
             start = 0
             end = 0
             for i in range(len(x)):
@@ -167,24 +168,46 @@ class KnowledgeBase():
                 negatePredicate1 = "~"
                 negatePredicate1 += predicate1
             for literal2 in candidate2:
-                #print(literal2)
+                
                 predicate2 = self.getPredicate(literal2)
                 if negatePredicate1 == predicate2:
                     
                     subSets = self.unification(literal1, literal2, {})
                     
                     if subSets != None:
-                        merged = list()
+                        merged = set()
+                        #print(union)
                         union.remove(literal1)
                         union.remove(literal2)
+                        
                         for item in union:
                             tempItem = item
-                            for variable in subSets:
-                                tempItem = item.replace(variable, subSets[variable])
-                                
-                            merged.append(tempItem)
-                        #print(merged)
-                        return merged
+                            tempPredicate = self.getPredicate(tempItem)
+                            
+                            start = 0
+                            end = 0
+                            for i in range(len(tempItem)):
+                                if tempItem[i] == "(":
+                                    start = i+1
+                                    break
+                            for i in range(len(tempItem)):
+                                if tempItem[i] == ")":
+                                    end = i
+                                    break
+                            variableX = tempItem[start:end]
+                            tempX = variableX.split(",")
+                            newTempX = [subSets[x] if x in subSets else x for x in tempX]
+                            newItem = tempPredicate + "("
+                            for que in newTempX:
+                                newItem += que
+                                newItem += ","
+                            newItem = newItem[:-1]
+                            newItem += ")"
+                            #print(newItem)
+                                #tempItem = re.sub(variable, subSets[variable], tempItem)
+                            merged.add(newItem)
+                        #print(candidate1, candidate2, union, subSets, merged)
+                        return list(sorted(merged))
         return None
  
 
@@ -215,15 +238,20 @@ class KnowledgeBase():
                         
                         for candidate2 in list2:
                             #print(candidate1, candidate2)
-                            merged = self.merge(candidate1, candidate2, set(candidate1).union(candidate2))
-                            #print(merged)
+                            
+                            merged = self.merge(set(candidate1), set(candidate2), set(candidate1).union(set(candidate2)))
+
+                            #print(candidate1, candidate2, merged)
                             if merged == []:
+                                #print(candidate1, candidate2)
                                 return True
                             else:
                                 if query in newMergedList:
                                     newMergedList.remove(query)
                                 if merged is not None:
                                     newMergedList.append(merged)
+                                    #print(newMergedList)
+                #print(newMergedList)
             
         return False
 
@@ -238,7 +266,7 @@ def main():
     numQueries = 0
     numKBs = 0
     i = 0
-    queries = set()
+    queries = list()
     KB = set()
     with open("input.txt", "r") as f:
         for line in f.readlines():
@@ -247,21 +275,39 @@ def main():
             if i == 1:
                 numQueries = int(line)
             elif i >= 2 and i <= 1+numQueries:
-                queries.add(line)
+                queries.append(line)
             elif i == 2+numQueries:
                 numKBs = int(line)
             elif i >= 3+numQueries and i < 3+numQueries+numKBs:
                 KB.add(line)
-
+    f.close()
+    #print(KB)
     knowledgeBase = KnowledgeBase(KB)
     #knowledgeBase.deBug()
     #print(queries)
+    results = list()
     for query in queries:
         
         knowledgeBase.tell(query)
         #knowledgeBase.deBug()
         res = knowledgeBase.resolve(query)
-        print(res, query)
+        print(res)
+        results.append(res)
+    
+    with open("output.txt", "w") as f:
+        for i in range(len(results)):
+            if i < len(results)-1:
+                if results[i]:
+                    f.write("TRUE" + "\n")
+                else:
+                    f.write("FALSE" + "\n")
+            else:
+                if results[i]:
+                    f.write("TRUE")
+                else:
+                    f.write("FALSE")
+    f.close()
+        
         
 
 if __name__ == "__main__":
