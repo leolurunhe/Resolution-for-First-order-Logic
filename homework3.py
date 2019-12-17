@@ -108,12 +108,14 @@ class KnowledgeBase():
         
         elif x[0] >= 'a' and x[0] <='z' and isinstance(x, str):
             #unify_var(x, y, sub)
+            x = x.strip()
             if x in z:
                 return self.unification(z[x], y, z)
             else:
                 z[x] = y
                 return z
         elif y[0] >= 'a' and y[0] <= 'z' and isinstance(y, str):
+            y = y.strip()
             if y in z:
                 return self.unification(z[y], x, z)
             else:
@@ -123,6 +125,8 @@ class KnowledgeBase():
         elif isinstance(x, str) and isinstance(y, str) and "(" in x and "(" in y:
             start = 0
             end = 0
+            x = x.strip()
+            y = y.strip()
             for i in range(len(x)):
                 if x[i] == "(":
                     start = i+1
@@ -207,7 +211,7 @@ class KnowledgeBase():
                                 #tempItem = re.sub(variable, subSets[variable], tempItem)
                             merged.add(newItem)
                         #print(candidate1, candidate2, union, subSets, merged)
-                        return list(sorted(merged))
+                        return list(merged)
         return None
  
 
